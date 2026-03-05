@@ -1,0 +1,14 @@
+[Unit]
+Description=CloudPerf Backend
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/cloudperf/backend
+EnvironmentFile=/etc/cloudperf/backend.env
+ExecStart=/opt/cloudperf/backend/cloudperf-backend
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
