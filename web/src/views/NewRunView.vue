@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { SetupIcon, PlayIcon, Cross1Icon } from '@radix-icons/vue'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import Card from '@/components/ui/Card.vue'
@@ -37,7 +38,7 @@ async function loadNodes() {
 
 async function createRun() {
   if (pairs.value.length === 0) {
-    error.value = '请至少勾选一个方向组合'
+    error.value = 'Please select at least one direction pair.'
     return
   }
   error.value = ''
@@ -66,55 +67,104 @@ onMounted(loadNodes)
 </script>
 
 <template>
-  <div class="space-y-5">
-    <Card>
-      <h2 class="mb-3 text-lg font-semibold">创建即时测速任务</h2>
-      <div class="grid grid-cols-1 gap-3 md:grid-cols-4">
-        <label class="text-sm">协议
-          <select v-model="protocol" class="mt-1 w-full rounded-md border border-slate-700 bg-slate-900 px-2 py-2">
-            <option value="tcp">TCP</option>
-            <option value="udp">UDP</option>
-          </select>
-        </label>
-        <label class="text-sm">时长(s)
-          <Input v-model="duration" type="number" />
-        </label>
-        <label class="text-sm">并发流
-          <Input v-model="parallel" type="number" />
-        </label>
-        <label class="text-sm">UDP带宽
-          <Input v-model="udpBandwidth" placeholder="100M" :disabled="protocol !== 'udp'" />
-        </label>
+  <div class="space-y-6 animate-fade-in relative z-10">
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-3xl font-bold tracking-tight">New Test Run</h2>
+        <p class="text-sm text-muted-foreground mt-1">Configure and establish network performance testing between your nodes.</p>
+      </div>
+    </div>
+
+    <!-- Configuration Panel -->
+    <Card class="border-primary/20 bg-primary/5">
+      <h3 class="mb-5 text-lg font-semibold flex items-center gap-2 text-primary">
+        <SetupIcon class="w-5 h-5"/> Test Parameters
+      </h3>
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-4">
+        <div class="space-y-2">
+           <label class="text-sm font-medium text-foreground">Protocol</label>
+           <select v-model="protocol" class="flex h-9 w-full rounded-md border border-input bg-background/50 backdrop-blur-sm px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring hover:bg-background/80 hover:border-input/80">
+             <option value="tcp">TCP</option>
+             <option value="udp">UDP</option>
+           </select>
+        </div>
+        <div class="space-y-2">
+           <label class="text-sm font-medium text-foreground">Duration (s)</label>
+           <Input v-model="duration" type="number" />
+        </div>
+        <div class="space-y-2">
+           <label class="text-sm font-medium text-foreground">Parallel Streams</label>
+           <Input v-model="parallel" type="number" min="1" />
+        </div>
+        <div class="space-y-2">
+           <label class="text-sm font-medium text-foreground transition-opacity" :class="protocol !== 'udp' ? 'opacity-50' : ''">UDP Bandwidth</label>
+           <Input v-model="udpBandwidth" placeholder="100M" :disabled="protocol !== 'udp'" />
+        </div>
       </div>
     </Card>
 
-    <Card>
-      <h2 class="mb-3 text-lg font-semibold">节点组合 Grid（单向）</h2>
-      <div class="overflow-auto">
-        <table class="w-full min-w-[700px] border-collapse text-xs">
+    <!-- Node Matrix Panel -->
+    <Card class="overflow-hidden p-0 flex flex-col">
+      <div class="p-6 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
+         <h3 class="text-lg font-semibold">Node Direction Matrix (Source ➡️ Target)</h3>
+         <div class="text-sm font-medium bg-primary/10 text-primary px-3 py-1 rounded-full border border-primary/20">
+            Selected: <span class="font-bold">{{ pairs.length }}</span> pairs
+         </div>
+      </div>
+      
+      <div class="overflow-x-auto p-4 bg-black/20">
+        <table class="w-full min-w-[700px] border-collapse text-sm">
           <thead>
             <tr>
-              <th class="border border-slate-800 px-2 py-2 text-left">Source \ Target</th>
-              <th v-for="t in nodes" :key="t.id" class="border border-slate-800 px-2 py-2">{{ t.name }}</th>
+              <th class="border border-white/10 bg-white/5 px-4 py-3 text-left font-medium text-muted-foreground whitespace-nowrap">
+                 Source \ Target
+              </th>
+              <th v-for="t in nodes" :key="t.id" class="border border-white/10 bg-white/5 px-4 py-3 font-medium text-center truncate max-w-[120px]">
+                 {{ t.name }}
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="s in nodes" :key="s.id">
-              <td class="border border-slate-800 px-2 py-2 font-medium">{{ s.name }}</td>
-              <td v-for="t in nodes" :key="`${s.id}-${t.id}`" class="border border-slate-800 px-2 py-2 text-center">
+            <tr v-if="nodes.length === 0">
+               <td :colspan="nodes.length + 1" class="border border-white/10 px-4 py-8 text-center text-muted-foreground">
+                  No nodes available. Add nodes in the Nodes page first.
+               </td>
+            </tr>
+            <tr v-for="s in nodes" :key="s.id" class="group/row">
+              <td class="border border-white/10 bg-white/5 px-4 py-3 font-medium truncate max-w-[120px] transition-colors group-hover/row:bg-white/10">
+                 {{ s.name }}
+              </td>
+              <td v-for="t in nodes" :key="`${s.id}-${t.id}`" 
+                  class="border border-white/10 px-4 py-2 text-center transition-colors hover:bg-white/[0.02]"
+                  :class="{'bg-primary/5': selected[`${s.id}->${t.id}`]}">
                 <template v-if="s.id !== t.id">
-                  <input v-model="selected[`${s.id}->${t.id}`]" type="checkbox" />
+                  <label class="flex items-center justify-center w-full h-full cursor-pointer p-2">
+                     <input v-model="selected[`${s.id}->${t.id}`]" type="checkbox" 
+                            class="w-4 h-4 rounded border-white/20 bg-black/40 text-primary focus:ring-primary focus:ring-offset-0 focus:ring-offset-transparent cursor-pointer transition-all" />
+                  </label>
                 </template>
-                <span v-else class="text-slate-600">-</span>
+                <span v-else class="flex items-center justify-center text-white/10 h-full p-2">
+                   <Cross1Icon class="w-4 h-4"/>
+                </span>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
-      <p class="mt-2 text-xs text-slate-400">已选择 {{ pairs.length }} 条单向组合</p>
-      <p v-if="error" class="mt-2 text-sm text-rose-400">{{ error }}</p>
-      <div class="mt-3">
-        <Button :disabled="loading" @click="createRun">{{ loading ? '创建中...' : '开始测速' }}</Button>
+      
+      <div class="p-6 bg-white/[0.01] border-t border-white/5 flex items-center justify-between">
+         <p v-if="error" class="text-sm font-medium text-destructive bg-destructive/10 px-3 py-1.5 rounded border border-destructive/20">{{ error }}</p>
+         <div v-else></div> <!-- Spacer -->
+         
+         <Button :disabled="loading || pairs.length === 0 || nodes.length < 2" @click="createRun" size="lg" class="shadow-[0_0_20px_rgba(var(--primary),0.3)]">
+            <span v-if="loading" class="flex items-center gap-2">
+              <span class="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent"></span>
+              Starting...
+            </span>
+            <span v-else class="flex items-center justify-center gap-2 font-bold">
+              <PlayIcon class="w-5 h-5"/> Start Benchmark
+            </span>
+         </Button>
       </div>
     </Card>
   </div>
