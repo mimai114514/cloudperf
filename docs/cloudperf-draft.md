@@ -69,6 +69,7 @@ WSS/WS
 - `GET /api/v1/auth/me`
 - `POST /api/v1/nodes`
 - `GET /api/v1/nodes`
+- `DELETE /api/v1/nodes/{id}`
 - `POST /api/v1/runs`
 - `GET /api/v1/runs/{id}`
 - `GET /api/v1/runs/{id}/pairs`

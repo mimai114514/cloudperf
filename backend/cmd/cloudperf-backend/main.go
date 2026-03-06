@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os/signal"
 	"syscall"
 
@@ -20,7 +21,17 @@ func main() {
 	}
 	defer srv.Close()
 
-	if err := srv.ListenAndServe(); err != nil {
+	// Graceful shutdown: when ctx is cancelled (Ctrl-C), shutdown the HTTP server.
+	go func() {
+		<-ctx.Done()
+		log.Println("shutting down...")
+		if err := srv.Shutdown(context.Background()); err != nil {
+			log.Printf("shutdown error: %v", err)
+		}
+	}()
+
+	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("serve: %v", err)
 	}
+	log.Println("server stopped")
 }

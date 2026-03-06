@@ -206,8 +206,8 @@ bun run dev
 ```bash
 cd ~/code/cloudperf/agent
 export BACKEND_WS_URL="ws://127.0.0.1:8080/agent/v1/ws"
-export NODE_ID="替换为 local-a 的节点 ID"
-export NODE_TOKEN="替换为 local-a 的节点 TOKEN"
+export NODE_ID="node_1772815178274814605_85aabf1ae4932239"
+export NODE_TOKEN="a77420a0337697d7fd70af69526a872901d5f5fa9244f85b3e7d50035bbca1c0"
 export PUBLIC_IP="127.0.0.1"
 export AGENT_VERSION="dev-a"
 export HEARTBEAT_INTERVAL_SEC="15"
@@ -221,8 +221,8 @@ go run ./cmd/cloudperf-agent
 ```bash
 cd ~/code/cloudperf/agent
 export BACKEND_WS_URL="ws://127.0.0.1:8080/agent/v1/ws"
-export NODE_ID="替换为 local-b 的节点 ID"
-export NODE_TOKEN="替换为 local-b 的节点 TOKEN"
+export NODE_ID="node_1772815210056814243_ece0606ff47ff32a"
+export NODE_TOKEN="958f7107b858cb0f45da95f9bd40acee724d3c44a7fcfa66a3565eb7a69afd9d"
 export PUBLIC_IP="127.0.0.1"
 export AGENT_VERSION="dev-b"
 export HEARTBEAT_INTERVAL_SEC="15"
