@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { SetupIcon, PlayIcon, Cross1Icon } from '@radix-icons/vue'
+import { GearIcon, PlayIcon, Cross1Icon } from '@radix-icons/vue'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import Card from '@/components/ui/Card.vue'
@@ -78,7 +78,7 @@ onMounted(loadNodes)
     <!-- Configuration Panel -->
     <Card class="border-primary/20 bg-primary/5">
       <h3 class="mb-5 text-lg font-semibold flex items-center gap-2 text-primary">
-        <SetupIcon class="w-5 h-5"/> Test Parameters
+        <GearIcon class="w-5 h-5"/> Test Parameters
       </h3>
       <div class="grid grid-cols-1 gap-6 md:grid-cols-4">
         <div class="space-y-2">
