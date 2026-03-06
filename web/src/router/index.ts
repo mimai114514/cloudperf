@@ -1,6 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '@/views/LoginView.vue'
+import DashboardView from '@/views/DashboardView.vue'
 import NodesView from '@/views/NodesView.vue'
+import RunsListView from '@/views/RunsListView.vue'
 import NewRunView from '@/views/NewRunView.vue'
 import RunDetailView from '@/views/RunDetailView.vue'
 import ResultsView from '@/views/ResultsView.vue'
@@ -10,11 +12,13 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/login', component: LoginView },
+    { path: '/', component: DashboardView },
     { path: '/nodes', component: NodesView },
+    { path: '/runs', component: RunsListView },
     { path: '/runs/new', component: NewRunView },
     { path: '/runs/:id', component: RunDetailView },
     { path: '/results', component: ResultsView },
-    { path: '/:pathMatch(.*)*', redirect: '/nodes' },
+    { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 })
 
@@ -27,7 +31,7 @@ router.beforeEach(async (to) => {
     return '/login'
   }
   if (to.path === '/login' && auth.userId) {
-    return '/nodes'
+    return '/'
   }
   return true
 })

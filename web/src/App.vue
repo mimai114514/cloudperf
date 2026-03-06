@@ -1,74 +1,96 @@
 <script setup lang="ts">
+import { RouterView, RouterLink, useRoute } from 'vue-router'
+import {
+  DashboardIcon, DesktopIcon, RocketIcon, BarChartIcon, ExitIcon
+} from '@radix-icons/vue'
+import { useAuthStore } from '@/stores/auth'
 import { computed } from 'vue'
-import { RouterLink, RouterView, useRoute } from 'vue-router'
-import { DesktopIcon, ActivityLogIcon, TargetIcon } from '@radix-icons/vue'
 
+const auth = useAuthStore()
 const route = useRoute()
-const isLogin = computed(() => route.path === '/login')
+
+const navItems = [
+  { to: '/', label: 'Dashboard', icon: DashboardIcon },
+  { to: '/nodes', label: 'Nodes', icon: DesktopIcon },
+  { to: '/runs', label: 'Runs', icon: RocketIcon },
+  { to: '/results', label: 'Results', icon: BarChartIcon },
+]
+
+const isLoggedIn = computed(() => !!auth.userId)
+const isLoginPage = computed(() => route.path === '/login')
+
+async function logout() {
+  await auth.logout()
+  window.location.href = '/login'
+}
 </script>
 
 <template>
-  <div class="min-h-screen text-foreground bg-background selection:bg-primary/30 antialiased font-sans flex flex-col relative z-0">
-    <!-- Background Glow Elements (behind everything) -->
-    <div class="pointer-events-none fixed inset-0 flex justify-center overflow-hidden z-[-1]">
-       <div class="w-[50rem] h-[50rem] rounded-full bg-primary/5 blur-3xl opacity-50 -translate-y-[40%]"></div>
+  <div class="min-h-screen relative">
+    <!-- Background glow effects -->
+    <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+      <div class="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 rounded-full bg-primary/[0.03] blur-[100px]"></div>
+      <div class="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 rounded-full bg-sky-500/[0.02] blur-[100px]"></div>
     </div>
 
     <!-- Header -->
-    <header v-if="!isLogin" class="sticky top-0 z-50 w-full border-b border-white/5 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40">
-      <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-        <div class="flex items-center gap-8">
-          <RouterLink to="/" class="flex items-center gap-2 transition-opacity hover:opacity-80">
-            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary ring-1 ring-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.3)]">
-              <DesktopIcon class="h-5 w-5" />
-            </div>
-            <span class="text-xl font-bold tracking-tight bg-gradient-to-br from-white to-white/40 bg-clip-text text-transparent">CloudPerf</span>
+    <header v-if="isLoggedIn && !isLoginPage"
+            class="sticky top-0 z-50 w-full border-b border-white/5 bg-background/80 backdrop-blur-xl">
+      <div class="container flex h-14 items-center">
+        <!-- Logo -->
+        <RouterLink to="/" class="flex items-center gap-2.5 mr-8 group">
+          <div class="h-7 w-7 rounded-lg bg-gradient-to-br from-primary to-sky-400 flex items-center justify-center shadow-lg shadow-primary/20 transition-transform group-hover:scale-110">
+            <span class="text-xs font-black text-white">CP</span>
+          </div>
+          <span class="font-bold text-sm tracking-tight hidden sm:inline">CloudPerf</span>
+        </RouterLink>
+
+        <!-- Navigation -->
+        <nav class="flex items-center gap-1 flex-1">
+          <RouterLink v-for="item in navItems" :key="item.to" :to="item.to"
+            class="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all"
+            :class="[
+              route.path === item.to || (item.to !== '/' && route.path.startsWith(item.to))
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+            ]">
+            <component :is="item.icon" class="w-4 h-4" />
+            <span class="hidden sm:inline">{{ item.label }}</span>
           </RouterLink>
-          
-          <nav class="hidden md:flex items-center gap-2 text-sm font-medium">
-            <RouterLink 
-              class="flex items-center gap-2 rounded-md px-3 py-2 text-muted-foreground transition-all duration-300 hover:bg-white/5 hover:text-foreground" 
-              active-class="!bg-white/10 !text-foreground shadow-sm ring-1 ring-white/10"
-              to="/nodes">
-              <DesktopIcon class="h-4 w-4" /> 节点
-            </RouterLink>
-            <RouterLink 
-              class="flex items-center gap-2 rounded-md px-3 py-2 text-muted-foreground transition-all duration-300 hover:bg-white/5 hover:text-foreground" 
-              active-class="!bg-white/10 !text-foreground shadow-sm ring-1 ring-white/10"
-              to="/runs/new">
-              <TargetIcon class="h-4 w-4" /> 即时测速
-            </RouterLink>
-            <RouterLink 
-              class="flex items-center gap-2 rounded-md px-3 py-2 text-muted-foreground transition-all duration-300 hover:bg-white/5 hover:text-foreground" 
-              active-class="!bg-white/10 !text-foreground shadow-sm ring-1 ring-white/10"
-              to="/results">
-              <ActivityLogIcon class="h-4 w-4" /> 历史结果
-            </RouterLink>
-          </nav>
-        </div>
+        </nav>
+
+        <!-- User actions -->
+        <button @click="logout"
+          class="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors">
+          <ExitIcon class="w-4 h-4" />
+          <span class="hidden sm:inline">Logout</span>
+        </button>
       </div>
     </header>
 
-    <!-- Main Content with Transition -->
-    <main class="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 py-8 relative">
-      <router-view v-slot="{ Component }">
+    <!-- Main content -->
+    <main :class="isLoginPage ? '' : 'container py-8'">
+      <RouterView v-slot="{ Component, route: viewRoute }">
         <transition name="page" mode="out-in">
-          <component :is="Component" />
+          <component :is="Component" :key="viewRoute.path" />
         </transition>
-      </router-view>
+      </RouterView>
     </main>
   </div>
 </template>
 
 <style>
-.page-enter-active,
-.page-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
+.page-enter-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
-
-.page-enter-from,
+.page-leave-active {
+  transition: opacity 0.1s ease;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
 .page-leave-to {
   opacity: 0;
-  transform: translateY(6px) scale(0.99);
 }
 </style>
