@@ -58,6 +58,7 @@ export const api = {
   me: () => req<{ user_id: string }>('/api/v1/auth/me'),
   listNodes: () => req<{ items: NodeItem[] }>('/api/v1/nodes'),
   createNode: (name: string) => req<{ node: NodeItem; token: string }>('/api/v1/nodes', { method: 'POST', body: JSON.stringify({ name }) }),
+  deleteNode: (id: string) => req<void>(`/api/v1/nodes/${id}`, { method: 'DELETE' }),
   createRun: (payload: Record<string, unknown>) => req<{ run_id: string }>('/api/v1/runs', { method: 'POST', body: JSON.stringify(payload) }),
   getRun: (id: string) => req<RunInfo>(`/api/v1/runs/${id}`),
   getRunPairs: (id: string) => req<{ items: RunPair[] }>(`/api/v1/runs/${id}/pairs`),

@@ -115,6 +115,7 @@ func (s *Server) routes() http.Handler {
 
 	mux.HandleFunc("POST /api/v1/nodes", s.withAuth(s.handleCreateNode))
 	mux.HandleFunc("GET /api/v1/nodes", s.withAuth(s.handleListNodes))
+	mux.HandleFunc("DELETE /api/v1/nodes/{id}", s.withAuth(s.handleDeleteNode))
 
 	mux.HandleFunc("POST /api/v1/runs", s.withAuth(s.handleCreateRun))
 	mux.HandleFunc("GET /api/v1/runs/{id}", s.withAuth(s.handleGetRun))
@@ -228,6 +229,19 @@ func (s *Server) handleListNodes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"items": nodes})
+}
+
+func (s *Server) handleDeleteNode(w http.ResponseWriter, r *http.Request) {
+	nodeID := r.PathValue("id")
+	if nodeID == "" {
+		writeErr(w, http.StatusBadRequest, "node id is required")
+		return
+	}
+	if err := s.store.DeleteNode(nodeID); err != nil {
+		writeErr(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) handleCreateRun(w http.ResponseWriter, r *http.Request) {

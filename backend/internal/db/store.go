@@ -155,6 +155,11 @@ func (s *Store) MarkNodeOffline(nodeID string) error {
 	return err
 }
 
+func (s *Store) DeleteNode(nodeID string) error {
+	_, err := s.db.Exec(`DELETE FROM nodes WHERE id = $1`, nodeID)
+	return err
+}
+
 func (s *Store) CreateRun(id, mode, protocol string, params map[string]any, pairs []PairSpec) error {
 	paramsJSON, err := json.Marshal(params)
 	if err != nil {

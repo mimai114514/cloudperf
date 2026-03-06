@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   GearIcon, PlayIcon, Cross1Icon, CheckCircledIcon,
@@ -43,8 +43,6 @@ const pairs = computed(() => {
   return out
 })
 
-const onlineNodes = computed(() => nodes.value.filter(n => n.status === 'online'))
-
 function togglePair(sourceId: string, targetId: string) {
   const key = `${sourceId}->${targetId}`
   selected.value[key] = !selected.value[key]
@@ -69,7 +67,6 @@ function getNodeName(id: string) {
   return nodes.value.find(n => n.id === id)?.name ?? id.slice(0, 16)
 }
 
-// Step navigation
 function nextStep() {
   if (step.value === 1) {
     step.value = 2
@@ -119,7 +116,6 @@ onMounted(async () => {
 
 <template>
   <div class="max-w-3xl mx-auto space-y-6 animate-fade-in relative z-10">
-    <!-- Header -->
     <div>
       <h2 class="text-3xl font-bold tracking-tight">New Benchmark</h2>
       <p class="text-sm text-muted-foreground mt-1">Configure and launch a network performance test.</p>
@@ -149,8 +145,6 @@ onMounted(async () => {
         <GearIcon class="w-5 h-5 text-primary" />
         <h3 class="text-lg font-semibold">Protocol & Parameters</h3>
       </div>
-
-      <!-- Protocol selector -->
       <div class="mb-6">
         <label class="text-sm font-medium text-muted-foreground mb-3 block">Select Protocol</label>
         <div class="grid grid-cols-2 gap-3">
@@ -172,8 +166,6 @@ onMounted(async () => {
           </button>
         </div>
       </div>
-
-      <!-- Parameters -->
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div class="space-y-2">
           <label class="text-sm font-medium text-foreground">Duration (seconds)</label>
@@ -188,15 +180,12 @@ onMounted(async () => {
           <Input v-model="udpBandwidth" placeholder="100M" :disabled="protocol !== 'udp'" />
         </div>
       </div>
-
       <div class="flex justify-end mt-6">
-        <Button @click="nextStep">
-          Next <ChevronRightIcon class="w-4 h-4 ml-1" />
-        </Button>
+        <Button @click="nextStep">Next <ChevronRightIcon class="w-4 h-4 ml-1" /></Button>
       </div>
     </Card>
 
-    <!-- Step 2. Select Node Pairs -->
+    <!-- Step 2. Select Node Pairs (N×N Matrix always) -->
     <Card v-if="step === 2" class="border-primary/20 bg-primary/5">
       <div class="flex items-center justify-between mb-5">
         <div class="flex items-center gap-2">
@@ -209,8 +198,8 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- Matrix view (compact for ≤ 8 nodes) -->
-      <div v-if="nodes.length <= 8" class="overflow-x-auto mb-4">
+      <!-- N×N Matrix (always) -->
+      <div v-if="nodes.length >= 2" class="overflow-x-auto mb-4">
         <table class="w-full min-w-[400px] border-collapse text-sm">
           <thead>
             <tr>
@@ -241,26 +230,11 @@ onMounted(async () => {
           </tbody>
         </table>
       </div>
-
-      <!-- List view for many nodes -->
-      <div v-else class="grid gap-2 sm:grid-cols-2 mb-4 max-h-[400px] overflow-y-auto pr-1">
-        <template v-for="s in nodes" :key="s.id">
-          <template v-for="t in nodes" :key="`${s.id}-${t.id}`">
-            <label v-if="s.id !== t.id"
-              class="flex items-center gap-3 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors text-sm"
-              :class="selected[`${s.id}->${t.id}`]
-                ? 'border-primary/30 bg-primary/10'
-                : 'border-white/10 hover:border-white/20'">
-              <input :checked="!!selected[`${s.id}->${t.id}`]"
-                     @change="togglePair(s.id, t.id)" type="checkbox"
-                     class="w-4 h-4 rounded border-white/20 bg-black/40 text-primary focus:ring-primary cursor-pointer shrink-0" />
-              <span class="truncate">{{ s.name }} → {{ t.name }}</span>
-            </label>
-          </template>
-        </template>
+      <div v-else class="text-center py-8 text-muted-foreground">
+        <DesktopIcon class="w-8 h-8 mx-auto mb-2 opacity-20" />
+        <p>At least 2 nodes are needed. Go to Nodes page to add more.</p>
       </div>
 
-      <!-- Selected pairs summary -->
       <div class="flex items-center gap-2 text-sm mb-4">
         <span :class="pairs.length > 0 ? 'text-primary' : 'text-muted-foreground'" class="font-medium">{{ pairs.length }} pair(s) selected</span>
       </div>
@@ -268,12 +242,8 @@ onMounted(async () => {
       <p v-if="error" class="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded border border-destructive/20 mb-4">{{ error }}</p>
 
       <div class="flex justify-between">
-        <Button variant="outline" @click="prevStep">
-          <ChevronLeftIcon class="w-4 h-4 mr-1" /> Back
-        </Button>
-        <Button @click="nextStep">
-          Next <ChevronRightIcon class="w-4 h-4 ml-1" />
-        </Button>
+        <Button variant="outline" @click="prevStep"><ChevronLeftIcon class="w-4 h-4 mr-1" /> Back</Button>
+        <Button @click="nextStep">Next <ChevronRightIcon class="w-4 h-4 ml-1" /></Button>
       </div>
     </Card>
 
@@ -283,8 +253,6 @@ onMounted(async () => {
         <PlayIcon class="w-5 h-5 text-primary" />
         <h3 class="text-lg font-semibold">Confirm & Launch</h3>
       </div>
-
-      <!-- Summary -->
       <div class="space-y-4 mb-6">
         <div class="grid grid-cols-3 gap-4">
           <div class="rounded-lg border border-white/10 bg-white/5 p-4 text-center">
@@ -300,12 +268,10 @@ onMounted(async () => {
             <p class="text-xl font-bold">{{ parallel }}</p>
           </div>
         </div>
-
         <div v-if="protocol === 'udp'" class="rounded-lg border border-white/10 bg-white/5 p-4">
           <span class="text-xs uppercase tracking-wider text-muted-foreground">UDP Bandwidth:</span>
           <span class="ml-2 font-semibold">{{ udpBandwidth }}</span>
         </div>
-
         <div>
           <p class="text-xs uppercase tracking-wider text-muted-foreground mb-2">Test Pairs ({{ pairs.length }})</p>
           <div class="space-y-1.5 max-h-[200px] overflow-y-auto pr-1">
@@ -323,13 +289,9 @@ onMounted(async () => {
           </div>
         </div>
       </div>
-
       <p v-if="error" class="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded border border-destructive/20 mb-4">{{ error }}</p>
-
       <div class="flex justify-between">
-        <Button variant="outline" @click="prevStep">
-          <ChevronLeftIcon class="w-4 h-4 mr-1" /> Back
-        </Button>
+        <Button variant="outline" @click="prevStep"><ChevronLeftIcon class="w-4 h-4 mr-1" /> Back</Button>
         <Button :disabled="loading || pairs.length === 0" @click="createRun" size="lg"
                 class="shadow-[0_0_20px_rgba(var(--primary),0.3)]">
           <span v-if="loading" class="flex items-center gap-2">

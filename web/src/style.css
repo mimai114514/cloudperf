@@ -70,3 +70,13 @@
 .glass-panel {
   @apply bg-slate-900/60 backdrop-blur-xl border border-white/10 shadow-xl;
 }
+
+/* 隐藏 number input 默认的增减按钮 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}

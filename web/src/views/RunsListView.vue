@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { RocketIcon, PlusIcon, ArrowRightIcon, ReloadIcon } from '@radix-icons/vue'
+import { RocketIcon, PlusIcon, ArrowRightIcon, ReloadIcon, ClockIcon } from '@radix-icons/vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
 import { type RunInfo } from '@/api/client'
@@ -20,6 +20,11 @@ const getStatusColor = (status: string) => {
     case 'pending': return 'text-amber-400 bg-amber-500/10 border-amber-500/20'
     default: return 'text-muted-foreground bg-white/5 border-white/10'
   }
+}
+
+function formatTime(dateStr?: string) {
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleString()
 }
 
 async function load() {
@@ -55,7 +60,7 @@ onMounted(load)
         <table class="w-full text-sm text-left">
           <thead class="text-xs uppercase bg-white/[0.03] text-muted-foreground border-b border-white/5">
             <tr>
-              <th class="px-6 py-4 font-medium tracking-wider">Run ID</th>
+              <th class="px-6 py-4 font-medium tracking-wider">Time</th>
               <th class="px-6 py-4 font-medium tracking-wider">Protocol</th>
               <th class="px-6 py-4 font-medium tracking-wider">Mode</th>
               <th class="px-6 py-4 font-medium tracking-wider">Status</th>
@@ -82,7 +87,9 @@ onMounted(load)
             <tr v-for="run in runs" :key="run.id"
                 class="transition-colors hover:bg-white/[0.02] cursor-pointer"
                 @click="router.push(`/runs/${run.id}`)">
-              <td class="px-6 py-4 font-mono text-xs text-muted-foreground">{{ run.id }}</td>
+              <td class="px-6 py-4 text-sm text-muted-foreground tabular-nums">
+                <span class="inline-flex items-center gap-1.5"><ClockIcon class="w-3.5 h-3.5 shrink-0" />{{ formatTime(run.started_at) }}</span>
+              </td>
               <td class="px-6 py-4">
                 <span class="px-2 py-0.5 rounded text-xs font-semibold uppercase bg-white/10">{{ run.protocol }}</span>
               </td>

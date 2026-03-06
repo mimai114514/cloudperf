@@ -3,8 +3,7 @@ import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   DashboardIcon, DesktopIcon, RocketIcon, TargetIcon,
-  CheckCircledIcon, CrossCircledIcon, LightningBoltIcon, PlusIcon,
-  ArrowRightIcon
+  LightningBoltIcon, PlusIcon, ArrowRightIcon, ClockIcon
 } from '@radix-icons/vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
@@ -35,13 +34,19 @@ const getStatusColor = (status: string) => {
   }
 }
 
+function formatTime(dateStr?: string) {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  return d.toLocaleString()
+}
+
 onMounted(async () => {
   try {
     const [nodesRes] = await Promise.all([api.listNodes()])
     nodes.value = nodesRes.items
     recentRuns.value = await runsStore.fetchAll()
   } catch {
-    // silent fail on dashboard
+    // silent fail
   } finally {
     loading.value = false
   }
@@ -50,7 +55,6 @@ onMounted(async () => {
 
 <template>
   <div class="space-y-8 animate-fade-in relative z-10">
-    <!-- Header -->
     <div>
       <h1 class="text-3xl font-bold tracking-tight flex items-center gap-3">
         <DashboardIcon class="w-8 h-8 text-primary" />
@@ -61,9 +65,7 @@ onMounted(async () => {
 
     <!-- Stats Cards -->
     <div class="grid gap-4 md:grid-cols-3">
-      <!-- Online Nodes -->
-      <Card class="relative overflow-hidden group">
-        <div class="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-500/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      <div class="rounded-xl border border-white/5 bg-card/40 backdrop-blur-xl p-5 shadow-lg">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">Online Nodes</p>
@@ -76,27 +78,21 @@ onMounted(async () => {
             <DesktopIcon class="w-6 h-6 text-emerald-400" />
           </div>
         </div>
-      </Card>
+      </div>
 
-      <!-- Completed Runs -->
-      <Card class="relative overflow-hidden group">
-        <div class="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-sky-500/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      <div class="rounded-xl border border-white/5 bg-card/40 backdrop-blur-xl p-5 shadow-lg">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Test Runs</p>
-            <p class="text-3xl font-bold mt-1 tabular-nums">
-              {{ totalRuns }}
-            </p>
+            <p class="text-3xl font-bold mt-1 tabular-nums">{{ totalRuns }}</p>
           </div>
           <div class="h-12 w-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center">
             <RocketIcon class="w-6 h-6 text-sky-400" />
           </div>
         </div>
-      </Card>
+      </div>
 
-      <!-- Success Rate -->
-      <Card class="relative overflow-hidden group">
-        <div class="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-primary/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+      <div class="rounded-xl border border-white/5 bg-card/40 backdrop-blur-xl p-5 shadow-lg">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-xs font-medium uppercase tracking-wider text-muted-foreground">Success / Failed</p>
@@ -110,13 +106,13 @@ onMounted(async () => {
             <TargetIcon class="w-6 h-6 text-primary" />
           </div>
         </div>
-      </Card>
+      </div>
     </div>
 
     <!-- Quick Actions -->
     <div class="grid gap-4 md:grid-cols-2">
       <button @click="router.push('/nodes')"
-        class="group relative flex items-center gap-5 rounded-xl border border-white/10 bg-card/40 backdrop-blur-xl p-6 text-left transition-all hover:border-emerald-500/30 hover:bg-emerald-500/5 hover:shadow-xl hover:-translate-y-0.5 focus:outline-none">
+        class="group relative flex items-center gap-5 rounded-xl border border-white/10 bg-card/40 backdrop-blur-xl p-6 text-left transition-all hover:border-emerald-500/30 hover:bg-emerald-500/5 focus:outline-none">
         <div class="h-14 w-14 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
           <PlusIcon class="w-7 h-7 text-emerald-400" />
         </div>
@@ -128,7 +124,7 @@ onMounted(async () => {
       </button>
 
       <button @click="router.push('/runs/new')"
-        class="group relative flex items-center gap-5 rounded-xl border border-white/10 bg-card/40 backdrop-blur-xl p-6 text-left transition-all hover:border-primary/30 hover:bg-primary/5 hover:shadow-xl hover:-translate-y-0.5 focus:outline-none">
+        class="group relative flex items-center gap-5 rounded-xl border border-white/10 bg-card/40 backdrop-blur-xl p-6 text-left transition-all hover:border-primary/30 hover:bg-primary/5 focus:outline-none">
         <div class="h-14 w-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 transition-transform group-hover:scale-110">
           <LightningBoltIcon class="w-7 h-7 text-primary" />
         </div>
@@ -140,7 +136,7 @@ onMounted(async () => {
       </button>
     </div>
 
-    <!-- Recent Runs -->
+    <!-- Recent Runs (show time instead of ID) -->
     <Card class="p-0 overflow-hidden">
       <div class="p-5 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
         <h3 class="text-lg font-semibold flex items-center gap-2">
@@ -154,7 +150,7 @@ onMounted(async () => {
         <table class="w-full text-sm text-left">
           <thead class="text-xs uppercase bg-white/[0.03] text-muted-foreground border-b border-white/5">
             <tr>
-              <th class="px-6 py-3 font-medium tracking-wider">Run ID</th>
+              <th class="px-6 py-3 font-medium tracking-wider">Time</th>
               <th class="px-6 py-3 font-medium tracking-wider">Protocol</th>
               <th class="px-6 py-3 font-medium tracking-wider">Status</th>
               <th class="px-6 py-3 font-medium tracking-wider text-right">Action</th>
@@ -176,7 +172,10 @@ onMounted(async () => {
             <tr v-for="run in recentRuns.slice(0, 5)" :key="run.id"
                 class="transition-colors hover:bg-white/[0.02] cursor-pointer"
                 @click="router.push(`/runs/${run.id}`)">
-              <td class="px-6 py-4 font-mono text-xs text-muted-foreground">{{ run.id.slice(0, 24) }}…</td>
+              <td class="px-6 py-4 text-sm text-muted-foreground tabular-nums flex items-center gap-1.5">
+                <ClockIcon class="w-3.5 h-3.5 shrink-0" />
+                {{ formatTime(run.started_at) }}
+              </td>
               <td class="px-6 py-4">
                 <span class="px-2 py-0.5 rounded text-xs font-semibold uppercase bg-white/10">{{ run.protocol }}</span>
               </td>
