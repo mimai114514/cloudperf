@@ -23,8 +23,10 @@ const showResultModal = ref(false)
 const createdNode = ref<{ id: string; name: string; token: string } | null>(null)
 const copiedField = ref<string | null>(null)
 
-// Delete confirm
-const deletingId = ref<string | null>(null)
+// Delete confirm dialog
+const showDeleteDialog = ref(false)
+const deletingNode = ref<NodeItem | null>(null)
+const deleting = ref(false)
 
 async function loadNodes() {
   const res = await api.listNodes()
@@ -50,13 +52,24 @@ async function createNode() {
   }
 }
 
-async function deleteNode(id: string) {
+function confirmDelete(node: NodeItem) {
+  deletingNode.value = node
+  showDeleteDialog.value = true
+}
+
+async function deleteNode() {
+  if (!deletingNode.value) return
+  deleting.value = true
   try {
-    await api.deleteNode(id)
-    deletingId.value = null
+    await api.deleteNode(deletingNode.value.id)
+    showDeleteDialog.value = false
+    deletingNode.value = null
     await loadNodes()
   } catch (e) {
     error.value = (e as Error).message
+    showDeleteDialog.value = false
+  } finally {
+    deleting.value = false
   }
 }
 
@@ -144,21 +157,44 @@ onMounted(loadNodes)
               <td class="px-6 py-4 text-xs text-muted-foreground tabular-nums">{{ relativeTime(node.last_heartbeat_at) }}</td>
               <td class="px-6 py-4 text-xs text-muted-foreground">{{ node.agent_version || '-' }}</td>
               <td class="px-6 py-4 text-right">
-                <button v-if="deletingId !== node.id"
-                  @click.stop="deletingId = node.id"
-                  class="text-muted-foreground hover:text-destructive transition-colors p-1 rounded">
+                <button @click.stop="confirmDelete(node)"
+                  class="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded-md hover:bg-destructive/10">
                   <TrashIcon class="w-4 h-4" />
                 </button>
-                <span v-else class="inline-flex items-center gap-2 text-xs">
-                  <button @click.stop="deleteNode(node.id)" class="text-destructive hover:underline font-medium">Delete</button>
-                  <button @click.stop="deletingId = null" class="text-muted-foreground hover:underline">Cancel</button>
-                </span>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
     </Card>
+
+    <!-- Delete Confirmation Dialog -->
+    <Teleport to="body">
+      <div v-if="showDeleteDialog" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showDeleteDialog = false"></div>
+        <div class="relative w-full max-w-sm rounded-2xl border border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl p-6 space-y-5 animate-slide-up">
+          <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
+              <TrashIcon class="w-5 h-5 text-destructive" />
+            </div>
+            <div>
+              <h3 class="font-bold text-lg">Delete Node</h3>
+              <p class="text-sm text-muted-foreground">This action cannot be undone.</p>
+            </div>
+          </div>
+          <p class="text-sm">
+            Are you sure you want to delete <span class="font-semibold text-foreground">{{ deletingNode?.name }}</span>?
+            All associated test pairs and results will also be removed.
+          </p>
+          <div class="flex justify-end gap-3">
+            <Button variant="outline" @click="showDeleteDialog = false">Cancel</Button>
+            <Button @click="deleteNode" :disabled="deleting" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {{ deleting ? 'Deleting...' : 'Delete' }}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
 
     <!-- Create Node Dialog -->
     <Teleport to="body">

@@ -156,8 +156,34 @@ func (s *Store) MarkNodeOffline(nodeID string) error {
 }
 
 func (s *Store) DeleteNode(nodeID string) error {
-	_, err := s.db.Exec(`DELETE FROM nodes WHERE id = $1`, nodeID)
-	return err
+	tx, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Delete results associated with pairs that reference this node
+	if _, err := tx.Exec(`
+		DELETE FROM test_results WHERE pair_id IN (
+			SELECT id FROM test_run_pairs WHERE source_node_id = $1 OR target_node_id = $1
+		)
+	`, nodeID); err != nil {
+		return err
+	}
+
+	// Delete pairs that reference this node
+	if _, err := tx.Exec(`
+		DELETE FROM test_run_pairs WHERE source_node_id = $1 OR target_node_id = $1
+	`, nodeID); err != nil {
+		return err
+	}
+
+	// Delete the node itself
+	if _, err := tx.Exec(`DELETE FROM nodes WHERE id = $1`, nodeID); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (s *Store) CreateRun(id, mode, protocol string, params map[string]any, pairs []PairSpec) error {
