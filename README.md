@@ -16,6 +16,19 @@ CloudPerf 是一个用于多 VPS 间 iperf3 测速的系统，包含：
 
 ## 本地启动（开发）
 
+默认在 `WSL2` 中进行本地开发。
+
+建议先在 WSL2 内拉取最新代码，再开始本地联调：
+
+```bash
+mkdir -p ~/code
+cd ~/code
+git clone <你的仓库地址> cloudperf
+# 已有仓库时
+cd ~/code/cloudperf
+git pull --ff-only
+```
+
 1. 准备 PostgreSQL 并创建数据库：`deploy/postgres-init.sql`
 2. 启动后端：
    - 进入 `backend/`
@@ -28,8 +41,11 @@ CloudPerf 是一个用于多 VPS 间 iperf3 测速的系统，包含：
    - 运行 `go run ./cmd/cloudperf-agent`
 4. 启动前端：
    - 进入 `web/`
-   - `npm install`
-   - `npm run dev`
+   - `bun install`
+   - `unset VITE_API_BASE`
+   - `bun run dev`
+
+更完整的单机联调说明见 [`docs/single-machine-dev.md`](/C:/Users/Infinity/Documents/Code/cloudperf/docs/single-machine-dev.md)。
 
 ## 默认账号
 
